@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:sqlite3/sqlite3.dart';
 
 class DataBaseHelper {
-  // Acesso interno ao driver SQLite — não exposto fora da classe.
   late Database _db;
 
   static String _getPath() {
@@ -22,7 +21,6 @@ class DataBaseHelper {
     _createSchema();
   }
 
-  /// Abre um banco SQLite em memória — usado exclusivamente em testes.
   void initMemory() {
     _db = sqlite3.openInMemory();
     _createSchema();
@@ -42,12 +40,10 @@ class DataBaseHelper {
 );''');
   }
 
-  /// Executa uma instrução SQL sem retorno (INSERT, UPDATE, DELETE, DDL).
   void execute(String sql, [List<Object?> params = const []]) {
     _db.execute(sql, params);
   }
 
-  /// Executa um SELECT e retorna as linhas como lista de mapas.
   List<Map<String, dynamic>> select(
     String sql, [
     List<Object?> params = const [],

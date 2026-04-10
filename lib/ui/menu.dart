@@ -9,7 +9,6 @@ import '../models/log_entry.dart';
 import 'components.dart';
 import 'renderer.dart';
 
-/// Ponto de entrada da UI: inicializa o banco e executa o loop de menu.
 Future<void> runMenu() async {
   final scr = Screen.instance;
   final db = DataBaseHelper();
@@ -17,8 +16,6 @@ Future<void> runMenu() async {
 
   final service = LogService(db);
 
-  // Entra na tela alternativa — isola completamente a UI do histórico
-  // do shell. Ao sair, o terminal volta ao estado original.
   scr.enterAlt();
   scr.hideCursor();
 
@@ -74,35 +71,16 @@ Future<void> runMenu() async {
   scr.showCursor();
   scr.exitAlt();
 
-  // A mensagem de encerramento vai para o terminal real (fora do alt screen)
   stdout.writeln('\n${Theme.mauve}Até logo! DevLog encerrado.${Theme.reset}\n');
   db.close();
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────
-//
-// Layout (fiel à imagem de referência):
-//
-//   ╭──────────────────────────────────────────────────────────────╮
-//   │ ◆ DEVLOG / notyalC              sex, 10 abr  10:09  │       │
-//   │ ████████░░░░░░░░  N logs  ·  Xh Xm  ·  N projetos          │
-//   ╰──────────────────────────────────────────────────────────────╯
-//   ···············································
-//
-//   Último:  [Projeto] descrição...
-//   Semana:  Feature ×2  ·  Bugfix ×1
-//
-//   ···············································
-//
-//   O QUE VAMOS REGISTRAR HOJE?
-//
-// (seguido pelo radioMenu interativo)
 
 void _printDashboard(LogService service) {
   final all = service.getAll();
   final now = DateTime.now();
 
-  // Logs da semana atual (seg–dom)
   final weekStart = now.subtract(Duration(days: now.weekday - 1));
   final weekLogs = all.where((l) {
     final t = DateTime.tryParse(l.timestamp);
@@ -117,7 +95,6 @@ void _printDashboard(LogService service) {
       .map((l) => l.projeto)
       .toSet();
 
-  // Stats para o header
   final stats = [
     StatCard(label: 'logs', value: '${weekLogs.length}', color: Theme.green),
     StatCard(label: 'tempo', value: timeStr, color: Theme.cyan),
@@ -125,7 +102,6 @@ void _printDashboard(LogService service) {
         label: 'projetos', value: '${projects.length}', color: Theme.mauve),
   ];
 
-  // Header box (estilo da imagem)
   for (final line in Draw.headerLines(
     'DEVLOG / notyalC',
     stats,
@@ -135,11 +111,9 @@ void _printDashboard(LogService service) {
     stdout.writeln(line);
   }
 
-  // Separador pontilhado
   stdout.writeln(Draw.dottedLine());
   stdout.writeln();
 
-  // Último log registrado
   String lastStr;
   if (all.isNotEmpty) {
     final last = all.last;
@@ -154,7 +128,6 @@ void _printDashboard(LogService service) {
     '  ${Theme.gold}◷${Theme.reset}  ${Theme.dim('Último:')}  $lastStr',
   );
 
-  // Distribuição por categoria da semana
   final catCounts = <String, int>{};
   for (final l in weekLogs) {
     catCounts[l.categoria] = (catCounts[l.categoria] ?? 0) + 1;
@@ -169,12 +142,10 @@ void _printDashboard(LogService service) {
     '  ${Theme.gold}≡${Theme.reset}  ${Theme.dim('Semana:')}  $catLine',
   );
 
-  // Segundo separador pontilhado
   stdout.writeln();
   stdout.writeln(Draw.dottedLine());
   stdout.writeln();
 
-  // Subtítulo do menu
   stdout.writeln(
     '  ${Theme.dim('O QUE VAMOS REGISTRAR HOJE?')}',
   );
@@ -344,7 +315,6 @@ void _fluxoRelatorio(LogService service) {
     return;
   }
 
-  // Separa atividades de código e entradas de conhecimento
   final codeLogs =
       weekLogs.where((l) => l.tipo != 'Solução / Aprendizado').toList();
   final estudoLogs =
@@ -365,7 +335,6 @@ void _fluxoRelatorio(LogService service) {
 
   final maxMin = byProject.values.fold(0, (a, b) => a > b ? a : b);
 
-  // Tópicos da base de conhecimento (por tag)
   final tagCounts = <String, int>{};
   for (final l in estudoLogs) {
     for (final raw in (l.tags ?? '').split(',')) {
@@ -428,7 +397,6 @@ void _fluxoRelatorio(LogService service) {
   Screen.instance.showCursor();
 }
 
-/// Mini barra de progresso de texto para o relatório.
 String _miniBar(int value, int max) {
   const barWidth = 20;
   final filled = max > 0 ? (value / max * barWidth).round() : 0;
@@ -483,8 +451,6 @@ String _csvCell(String s) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/// Aguarda um Enter ou tecla antes de retornar ao menu.
-/// Mantém a tela visível para o usuário ler o resultado.
 void _pause() {
   stdout.write('\n${Theme.dim('  pressione Enter para continuar...')}');
   stdin.readLineSync();

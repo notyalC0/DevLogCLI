@@ -35,7 +35,7 @@ class LogService {
         map.keys.where((k) => k != 'id').map((k) => '$k = ?').join(', ');
     final values =
         map.entries.where((e) => e.key != 'id').map((e) => e.value).toList();
-    values.add(log.id); // id goes last for the WHERE clause
+    values.add(log.id);
 
     dataBaseHelper.execute(
       'UPDATE logs SET $setClause WHERE id = ?',
@@ -51,7 +51,6 @@ class LogService {
     return result.map((row) => LogEntry.fromMap(row)).toList();
   }
 
-  /// Retorna a lista de nomes de projeto distintos, em ordem alfabética.
   List<String> getProjects() {
     final result = dataBaseHelper.select(
       'SELECT DISTINCT projeto FROM logs ORDER BY projeto ASC',

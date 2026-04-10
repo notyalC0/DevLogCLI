@@ -47,6 +47,7 @@ void main() {
   tearDown(() => db.close());
 
   // ── insert + getAll ───────────────────────────────────────────────
+
   group('insert / getAll', () {
     test('banco começa vazio', () {
       expect(service.getAll(), isEmpty);

@@ -8,7 +8,6 @@ import '../logic/log_service.dart';
 import '../models/log_entry.dart';
 import 'renderer.dart';
 
-/// Categorias disponíveis para qualquer log de atividade.
 const kCategorias = [
   'Feature',
   'Refatoração',
@@ -23,10 +22,8 @@ const kCategorias = [
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 
-/// Métrica rápida exibida na barra de stats do header.
-///
 /// Dart 2.x: classe simples.
-/// Dart 3+ (quando migrar): pode trocar por record inline.
+/// Dart 3+ pode trocar por record inline.
 class StatCard {
   final String label;
   final String value;
@@ -42,17 +39,14 @@ abstract class Draw {
 
   // ─── Utilitários visuais ────────────────────────────────────────
 
-  /// Comprimento visual de [s] (ignora escape codes ANSI).
   static int vis(String s) =>
       s.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '').length;
 
-  /// Padding à direita até [width] colunas visuais.
   static String rpad(String s, int width) {
     final diff = width - vis(s);
     return diff > 0 ? '$s${' ' * diff}' : s;
   }
 
-  /// Centraliza [s] dentro de [width] colunas visuais.
   static String center(String s, int width) {
     final v = vis(s);
     final l = ((width - v) / 2).floor();
@@ -73,9 +67,6 @@ abstract class Draw {
   }
 
   // ─── Separador pontilhado ───────────────────────────────────────
-  //
-  // Produz uma linha de pontos cobrindo toda a largura do terminal.
-  // Idêntico ao separador da imagem de referência.
 
   static String dottedLine([int? width]) {
     final w = (width ?? _scr.cols).clamp(20, 200);
@@ -83,23 +74,11 @@ abstract class Draw {
   }
 
   // ─── Header box ─────────────────────────────────────────────────
-  //
-  // Estrutura (inspirada na imagem de referência):
-  //
-  //   ╭──────────────────────────────────────────────╮
-  //   │ ◆ DEVLOG              sex, 10 abr  10:09  │  │
-  //   │ ████████░░░░░  5 logs  ·  3h 20m  ·  2 proj  │
-  //   ╰──────────────────────────────────────────────╯
-  //
-  // Retorna as linhas prontas para stdout — não escreve diretamente,
-  // facilitando composição num frame completo.
 
   static List<String> headerLines(String appName, List<StatCard> stats,
       {int? totalLogs, int? maxLogs}) {
     final w = _scr.cols;
-    final inner = w - 2; // espaço entre │ e │
-
-    // ── Linha 1: título + datetime + divisor ──
+    final inner = w - 2;
     final now = DateTime.now();
     const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
     const months = [
@@ -132,7 +111,6 @@ abstract class Draw {
     final titleLine =
         '${Theme.mauve}│${Theme.reset}$titleLeft${' ' * gapTitle}$dateRight${Theme.mauve}│${Theme.reset}';
 
-    // ── Linha 2: barra de progresso + stats ──
     const barLen = 20;
     final n = totalLogs ?? 0;
     final maxN = (maxLogs != null && maxLogs > 0) ? maxLogs : (n > 0 ? n : 1);
@@ -158,14 +136,6 @@ abstract class Draw {
     ];
   }
 
-  // ─── Radio menu (redesenhado) ───────────────────────────────────
-  //
-  // Estilo da imagem:
-  //   ▶ ◉   Opção selecionada                  hotkey
-  //     ○   Opção normal                       hotkey
-  //
-  // Cada opção ocupa 1 linha + 1 linha em branco.
-
   static int radioMenu(
     List<String> options, {
     int initial = 0,
@@ -182,8 +152,6 @@ abstract class Draw {
       }
     }
 
-    // Cada opção = 1 linha de conteúdo + 1 linha em branco.
-    // Hints = 1 linha de conteúdo + 1 linha em branco.
     final totalLines = options.length * 2 + (hints != null ? 2 : 0);
 
     void render(bool first) {
@@ -193,18 +161,16 @@ abstract class Draw {
       for (int i = 0; i < options.length; i++) {
         final isSel = i == selected;
 
-        // Marcador: "▶ ◉" ou "  ○"
+
         final marker = isSel
             ? '${Theme.green}▶ ◉${Theme.reset}'
             : '  ${Theme.mauve}○${Theme.reset}';
 
-        // Label colorido para selecionado, dim para os outros
+
         final label = isSel
             ? '${Theme.text}${options[i]}${Theme.reset}'
             : Theme.dim(options[i]);
 
-        // vis do marcador raw = 3 chars ("▶ ◉" ou "  ○")
-        // + "  " prefix + "  " entre marker e label = 4 + 3 + 2 = ~9 prefix
         final labelVisLen = vis(options[i]) + 9;
 
         stdout.write('\x1B[2K');
@@ -216,7 +182,7 @@ abstract class Draw {
         } else {
           stdout.writeln('  $marker  $label');
         }
-        stdout.write('\x1B[2K\n'); // linha em branco
+        stdout.write('\x1B[2K\n');
       }
 
       if (hints != null) {
@@ -265,23 +231,8 @@ abstract class Draw {
   }
 
   // ─── Seletor de projeto ─────────────────────────────────────────
-  //
-  // Exibe a lista de projetos existentes num radioMenu inline.
-  // Quando o usuário escolhe "+ Novo projeto" um prompt livre é aberto.
-  // Retorna null se cancelado (:q / Esc) ou nome vazio no prompt.
 
-  /// Seleciona um projeto existente ou cria um novo.
-  /// [existing] = lista retornada por `LogService.getProjects()`.
-  /// [current]  = projeto pré-selecionado (para edição).
-  /// Tela de seleção de projeto com busca ao vivo.
-  ///
-  /// - Digite para filtrar projetos existentes.
-  /// - `↑`/`↓` navega; `Enter` seleciona o item destacado.
-  /// - `a` abre prompt para criar um novo projeto.
-  /// - `q` vazio / `Esc` cancela (retorna null).
-  /// - [current] pré-destaca o projeto já associado ao log (para edição).
   static String? projectPicker(List<String> existing, {String? current}) {
-    // Sem histórico: vai direto ao prompt
     if (existing.isEmpty) {
       final novo = prompt('Nome do projeto:');
       if (novo == null || novo.trim().isEmpty) return null;
@@ -292,7 +243,6 @@ abstract class Draw {
     var selected = 0;
     final inputW = (_scr.cols - 8).clamp(30, 60);
 
-    // Pré-seleciona o projeto atual (edição)
     if (current != null) {
       final idx = existing.indexOf(current);
       if (idx >= 0) selected = idx;
@@ -421,7 +371,6 @@ abstract class Draw {
           return null;
         }
         if (ch == 'a') {
-          // Cria novo projeto
           _exitRaw();
           final novo = prompt('Nome do novo projeto:');
           if (novo == null || novo.trim().isEmpty) return null;
@@ -440,9 +389,6 @@ abstract class Draw {
   }
 
   // ─── Barra de atalhos ────────────────────────────────────────────
-  //
-  // Estilo da imagem: "↑↓ navegar  ent confirmar  q sair"
-  // Sem colchetes — chave em verde, ação em dim.
 
   static void hotkeyBar(Map<String, String> shortcuts) {
     stdout.writeln('\n${hotkeyBarLine(shortcuts)}\n');
@@ -458,8 +404,6 @@ abstract class Draw {
 
   // ─── Prompt ──────────────────────────────────────────────────────
 
-  /// Lê uma linha do usuário com echo visível.
-  /// Retorna [null] se o usuário digitar `:q` (cancelar fluxo).
   static String? prompt(String question, {String color = Theme.pink}) {
     _exitRaw();
     stdout.write(
@@ -575,10 +519,6 @@ abstract class Draw {
   }
 
   // ─── Linha de log (list + search) ────────────────────────────────
-  //
-  // Formato:
-  //   ▶ ●  [projeto]  ·  descrição…                categoria  dd mmm
-  //   (linha em branco)
 
   static void _logRow(LogEntry e, bool selected, {int indent = 0}) {
     final w = _scr.cols;
@@ -619,7 +559,7 @@ abstract class Draw {
       return;
     }
 
-    var entries = allEntries; // local mutável para refresh após edit/delete
+    var entries = allEntries;
     var query = '';
     var selected = 0;
     final inputW = (_scr.cols - 8).clamp(30, 60);
@@ -638,7 +578,6 @@ abstract class Draw {
               (e.conteudo?.toLowerCase().contains(lower) ?? false);
         }).toList();
       }
-      // Agrupa por projeto (alfabético) e mais recente primeiro dentro do projeto
       base.sort((a, b) {
         final projCmp = a.projeto.compareTo(b.projeto);
         if (projCmp != 0) return projCmp;
@@ -686,7 +625,7 @@ abstract class Draw {
         for (int i = 0; i < show.length; i++) {
           final e = show[i];
           if (e.projeto != lastProj) {
-            if (lastProj != null) stdout.writeln(); // separador entre grupos
+            if (lastProj != null) stdout.writeln();
             lastProj = e.projeto;
             final isActive = e.projeto == selectedProj;
             final projColor = isActive ? Theme.green : Theme.mauve;
@@ -708,7 +647,7 @@ abstract class Draw {
           stdout.writeln('  $moreLabel');
           stdout.writeln();
         } else {
-          stdout.writeln(); // espaço após o último grupo
+          stdout.writeln();
         }
       }
 
@@ -790,7 +729,6 @@ abstract class Draw {
 
   // ─── Painel de detalhe ───────────────────────────────────────────
 
-  /// Exibe o detalhe de [e]. Retorna `true` se o log foi deletado.
   static bool logDetail(LogEntry e, {LogService? service}) {
     var entry = e;
 
@@ -879,8 +817,6 @@ abstract class Draw {
 
   // ─── Editar log ──────────────────────────────────────────────────
 
-  /// Abre um fluxo de edição para [e] usando [service].
-  /// Retorna o [LogEntry] atualizado, ou [null] se cancelado.
   static LogEntry? _editFlow(LogEntry e, LogService service) {
     _scr.clear();
     stdout.writeln(
