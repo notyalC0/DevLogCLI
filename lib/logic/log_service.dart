@@ -12,19 +12,19 @@ class LogService {
     final placeholders = List.filled(map.length, '?').join(', ');
     final values = map.values.toList();
 
-    dataBaseHelper.db.execute(
+    dataBaseHelper.execute(
       'INSERT INTO logs ($columns) VALUES ($placeholders)',
       values,
     );
   }
 
   List<LogEntry> getAll() {
-    final result = dataBaseHelper.db.select('SELECT * FROM logs');
+    final result = dataBaseHelper.select('SELECT * FROM logs');
     return result.map((row) => LogEntry.fromMap(row)).toList();
   }
 
   delete(int id) {
-    dataBaseHelper.db.execute('DELETE FROM logs WHERE id = ?', [id]);
+    dataBaseHelper.execute('DELETE FROM logs WHERE id = ?', [id]);
   }
 
   update(LogEntry log) {
@@ -37,14 +37,14 @@ class LogService {
         map.entries.where((e) => e.key != 'id').map((e) => e.value).toList();
     values.add(log.id); // id goes last for the WHERE clause
 
-    dataBaseHelper.db.execute(
+    dataBaseHelper.execute(
       'UPDATE logs SET $setClause WHERE id = ?',
       values,
     );
   }
 
   List<LogEntry> search(String query) {
-    final result = dataBaseHelper.db.select(
+    final result = dataBaseHelper.select(
       'SELECT * FROM logs WHERE descricao LIKE ? OR tags LIKE ?',
       ['%$query%', '%$query%'],
     );
@@ -71,7 +71,7 @@ class LogService {
     final whereClause =
         conditions.isNotEmpty ? 'WHERE ${conditions.join(' AND ')}' : '';
     final result =
-        dataBaseHelper.db.select('SELECT * FROM logs $whereClause', values);
+        dataBaseHelper.select('SELECT * FROM logs $whereClause', values);
 
     return result.map((row) => LogEntry.fromMap(row)).toList();
   }

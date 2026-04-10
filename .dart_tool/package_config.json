@@ -2,57 +2,79 @@
   "configVersion": 2,
   "packages": [
     {
-      "name": "collection",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/collection-1.19.1",
+      "name": "characters",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/characters-1.3.0",
       "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "clock",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/clock-1.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "collection",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/collection-1.18.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "dart_console",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/dart_console-1.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
     },
     {
       "name": "ffi",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/ffi-2.2.0",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/ffi-2.0.2",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.17.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "js",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/js-0.6.7",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
     },
     {
       "name": "meta",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/meta-1.18.2",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.16.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "2.12"
     },
     {
       "name": "path",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/path-1.9.1",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/path-1.8.3",
       "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "2.12"
     },
     {
       "name": "sqlite3",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/sqlite3-2.9.4",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/sqlite3-1.11.2",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "2.18"
     },
     {
-      "name": "typed_data",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/typed_data-1.4.0",
+      "name": "win32",
+      "rootUri": "file:///C:/Users/asn/AppData/Local/Pub/Cache/hosted/pub.dev/win32-2.7.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
-      "name": "web",
-      "rootUri": "file:///home/notyalc/.pub-cache/hosted/pub.dev/web-1.1.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "2.17"
     },
     {
       "name": "DevLogCli",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.11"
+      "languageVersion": "2.19"
     }
   ],
+  "generated": "2026-04-10T17:25:04.981093Z",
   "generator": "pub",
-  "generatorVersion": "3.11.4",
-  "flutterRoot": "file:///home/notyalc/.cache/flutter_sdk",
-  "flutterVersion": "3.41.6",
-  "pubCache": "file:///home/notyalc/.pub-cache"
+  "generatorVersion": "2.19.6"
 }
