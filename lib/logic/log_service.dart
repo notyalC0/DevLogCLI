@@ -51,6 +51,14 @@ class LogService {
     return result.map((row) => LogEntry.fromMap(row)).toList();
   }
 
+  /// Retorna a lista de nomes de projeto distintos, em ordem alfabética.
+  List<String> getProjects() {
+    final result = dataBaseHelper.select(
+      'SELECT DISTINCT projeto FROM logs ORDER BY projeto ASC',
+    );
+    return result.map((row) => row['projeto'] as String).toList();
+  }
+
   List<LogEntry> filter({String? projeto, String? categoria, String? tipo}) {
     final conditions = <String>[];
     final values = <dynamic>[];

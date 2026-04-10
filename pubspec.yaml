@@ -1,6 +1,12 @@
 name: DevLogCli
+description: "A command-line application for managing development logs using SQLite."
+version: 1.2.0
+executables:
+  devlog: bin/devlog.dart
 dependencies:
   sqlite3: ">=1.0.0 <2.0.0"
   dart_console: ">=1.1.0 <2.0.0"
 environment:
   sdk: ">=2.19.0 <4.0.0"
+dev_dependencies:
+  test: ">=1.20.0 <2.0.0"

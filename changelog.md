@@ -13,6 +13,31 @@ _(Melhorias planejadas para a próxima versão — ver [documentacao.md](documen
 
 ---
 
+## [1.2.0] — 2026-04-10
+
+### Adicionado
+
+#### UI — Seletor de Projeto
+
+- `Draw.projectPicker` — tela de busca ao vivo para selecionar projetos existentes; filtra conforme digita; janela de até 8 visíveis com scroll (`▲ N acima` / `▼ N abaixo`); `a` abre prompt para criar novo projeto; `q`/`Esc` cancela
+- Usado automaticamente em `_fluxoAtividade`, `_fluxoAprendizado` e `_editFlow` no lugar do prompt livre de texto para o campo projeto
+
+#### Lógica
+
+- `LogService.getProjects` — `SELECT DISTINCT projeto ORDER BY projeto ASC`; base para o seletor e para testes
+- `DataBaseHelper.initMemory` — abre banco SQLite `:memory:` para uso exclusivo em testes unitários
+
+#### UI — Busca agrupada
+
+- Resultados do `liveSearch` agrupados por projeto: header `◈ NomeProjeto  N logs` por grupo; mais recente primeiro dentro de cada grupo; blank line entre grupos
+
+#### Testes
+
+- `test/log_entry_test.dart` — testes de `toMap`/`fromMap`: campos obrigatórios, nullable, round-trip, withId
+- `test/log_service_test.dart` — testes de `insert`, `getAll`, `delete`, `update`, `search`, `filter`, `getProjects` com banco in-memory
+
+---
+
 ## [1.1.0] — 2026-04-14
 
 ### Adicionado

@@ -19,6 +19,16 @@ class DataBaseHelper {
 
     _db = sqlite3.open(dbFile);
 
+    _createSchema();
+  }
+
+  /// Abre um banco SQLite em memória — usado exclusivamente em testes.
+  void initMemory() {
+    _db = sqlite3.openInMemory();
+    _createSchema();
+  }
+
+  void _createSchema() {
     _db.execute('''CREATE TABLE IF NOT EXISTS logs (
   id               INTEGER PRIMARY KEY AUTOINCREMENT,
   timestamp        TEXT    NOT NULL,

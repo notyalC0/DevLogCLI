@@ -264,6 +264,181 @@ abstract class Draw {
     }
   }
 
+  // ─── Seletor de projeto ─────────────────────────────────────────
+  //
+  // Exibe a lista de projetos existentes num radioMenu inline.
+  // Quando o usuário escolhe "+ Novo projeto" um prompt livre é aberto.
+  // Retorna null se cancelado (:q / Esc) ou nome vazio no prompt.
+
+  /// Seleciona um projeto existente ou cria um novo.
+  /// [existing] = lista retornada por `LogService.getProjects()`.
+  /// [current]  = projeto pré-selecionado (para edição).
+  /// Tela de seleção de projeto com busca ao vivo.
+  ///
+  /// - Digite para filtrar projetos existentes.
+  /// - `↑`/`↓` navega; `Enter` seleciona o item destacado.
+  /// - `a` abre prompt para criar um novo projeto.
+  /// - `q` vazio / `Esc` cancela (retorna null).
+  /// - [current] pré-destaca o projeto já associado ao log (para edição).
+  static String? projectPicker(List<String> existing, {String? current}) {
+    // Sem histórico: vai direto ao prompt
+    if (existing.isEmpty) {
+      final novo = prompt('Nome do projeto:');
+      if (novo == null || novo.trim().isEmpty) return null;
+      return novo.trim();
+    }
+
+    var query = '';
+    var selected = 0;
+    final inputW = (_scr.cols - 8).clamp(30, 60);
+
+    // Pré-seleciona o projeto atual (edição)
+    if (current != null) {
+      final idx = existing.indexOf(current);
+      if (idx >= 0) selected = idx;
+    }
+
+    List<String> doFilter(String q) {
+      if (q.isEmpty) return existing;
+      final lower = q.toLowerCase();
+      return existing.where((p) => p.toLowerCase().contains(lower)).toList();
+    }
+
+    void render(List<String> filtered) {
+      _scr.clear();
+      stdout.writeln();
+
+      final cursor = '${Theme.green}▌${Theme.reset}';
+      final inputText = query.isEmpty
+          ? Theme.dim('filtrar projetos...')
+          : '${Theme.text}$query${Theme.reset}$cursor';
+      final rawLen = query.isEmpty ? 19 : query.length + 1;
+      final fillLen = (inputW - rawLen - 2).clamp(0, inputW);
+
+      stdout.writeln(
+          '  ${Theme.pink}◆${Theme.reset} ${Theme.text}Projeto${Theme.reset}');
+      stdout.writeln();
+      stdout.writeln('  ${Theme.mauve}╭${'─' * inputW}╮${Theme.reset}');
+      stdout.writeln(
+          '  ${Theme.mauve}│${Theme.reset} $inputText${' ' * fillLen} ${Theme.mauve}│${Theme.reset}');
+      stdout.writeln('  ${Theme.mauve}╰${'─' * inputW}╯${Theme.reset}');
+      stdout.writeln();
+      stdout.writeln(dottedLine());
+      stdout.writeln();
+
+      if (filtered.isEmpty) {
+        stdout.writeln(
+          '  ${Theme.dim('Nenhum projeto encontrado — ')}${Theme.green}a${Theme.reset}${Theme.dim(' para criar novo')}',
+        );
+        stdout.writeln();
+      } else {
+        const pageSize = 8;
+        final offset = (selected - pageSize + 1).clamp(0, filtered.length);
+        final end = (offset + pageSize).clamp(0, filtered.length);
+        final page = filtered.sublist(offset, end);
+
+        if (offset > 0) {
+          stdout.writeln(
+            '  ${Theme.dim('▲  ${offset} projeto(s) acima...')}',
+          );
+          stdout.writeln();
+        }
+        for (int i = 0; i < page.length; i++) {
+          final absIdx = offset + i;
+          final isSel = absIdx == selected;
+          final arrow = isSel ? '${Theme.green}▶${Theme.reset}' : ' ';
+          final dot = isSel
+              ? '${Theme.green}●${Theme.reset}'
+              : '${Theme.mauve}○${Theme.reset}';
+          final label = isSel
+              ? '${Theme.text}${filtered[absIdx]}${Theme.reset}'
+              : Theme.dim(filtered[absIdx]);
+          stdout.writeln('   $arrow $dot  $label');
+          stdout.writeln();
+        }
+        if (end < filtered.length) {
+          final remaining = filtered.length - end;
+          stdout.writeln(
+            '  ${Theme.dim('▼  $remaining projeto(s) abaixo...')}',
+          );
+          stdout.writeln();
+        }
+      }
+
+      stdout.writeln(dottedLine());
+      hotkeyBar({
+        '↑↓': 'navegar',
+        'ent': 'selecionar',
+        'a': 'novo projeto',
+        'q': 'cancelar',
+      });
+    }
+
+    _enterRaw();
+    var filtered = doFilter(query);
+    render(filtered);
+
+    while (true) {
+      final key = _scr.readKey();
+      if (key.isControl) {
+        switch (key.controlChar) {
+          case ControlCharacter.arrowUp:
+            if (selected > 0) {
+              selected--;
+              render(filtered);
+            }
+            break;
+          case ControlCharacter.arrowDown:
+            if (selected < filtered.length - 1) {
+              selected++;
+              render(filtered);
+            }
+            break;
+          case ControlCharacter.enter:
+            if (filtered.isNotEmpty) {
+              _exitRaw();
+              return filtered[selected];
+            }
+            break;
+          case ControlCharacter.escape:
+            _exitRaw();
+            return null;
+          case ControlCharacter.backspace:
+            if (query.isNotEmpty) {
+              query = query.substring(0, query.length - 1);
+              selected = 0;
+              filtered = doFilter(query);
+              render(filtered);
+            }
+            break;
+          default:
+            break;
+        }
+      } else {
+        final ch = key.char;
+        if (ch == 'q' && query.isEmpty) {
+          _exitRaw();
+          return null;
+        }
+        if (ch == 'a') {
+          // Cria novo projeto
+          _exitRaw();
+          final novo = prompt('Nome do novo projeto:');
+          if (novo == null || novo.trim().isEmpty) return null;
+          return novo.trim();
+        }
+        query += ch;
+        selected = 0;
+        filtered = doFilter(query);
+        render(filtered);
+      }
+    }
+
+    // ignore: dead_code
+    _exitRaw();
+    return null;
+  }
+
   // ─── Barra de atalhos ────────────────────────────────────────────
   //
   // Estilo da imagem: "↑↓ navegar  ent confirmar  q sair"
@@ -405,8 +580,9 @@ abstract class Draw {
   //   ▶ ●  [projeto]  ·  descrição…                categoria  dd mmm
   //   (linha em branco)
 
-  static void _logRow(LogEntry e, bool selected) {
+  static void _logRow(LogEntry e, bool selected, {int indent = 0}) {
     final w = _scr.cols;
+    final pad = ' ' * indent;
     final arrow = selected ? '${Theme.green}▶${Theme.reset}' : ' ';
     final dot = selected
         ? '${Theme.green}●${Theme.reset}'
@@ -427,7 +603,7 @@ abstract class Draw {
     final desc =
         selected ? '${Theme.text}$rawDesc${Theme.reset}' : Theme.dim(rawDesc);
 
-    final left = ' $arrow $dot  $proj${Theme.dim(' · ')}$desc';
+    final left = '$pad $arrow $dot  $proj${Theme.dim(' · ')}$desc';
     final right = '$cat  $date$dur';
     final gap = (w - vis(left) - vis(right) - 2).clamp(1, w);
 
@@ -449,15 +625,26 @@ abstract class Draw {
     final inputW = (_scr.cols - 8).clamp(30, 60);
 
     List<LogEntry> doFilter(String q) {
-      if (q.isEmpty) return entries;
-      final lower = q.toLowerCase();
-      return entries.where((e) {
-        return e.descricao.toLowerCase().contains(lower) ||
-            e.projeto.toLowerCase().contains(lower) ||
-            e.categoria.toLowerCase().contains(lower) ||
-            (e.tags?.toLowerCase().contains(lower) ?? false) ||
-            (e.conteudo?.toLowerCase().contains(lower) ?? false);
-      }).toList();
+      final List<LogEntry> base;
+      if (q.isEmpty) {
+        base = List.from(entries);
+      } else {
+        final lower = q.toLowerCase();
+        base = entries.where((e) {
+          return e.descricao.toLowerCase().contains(lower) ||
+              e.projeto.toLowerCase().contains(lower) ||
+              e.categoria.toLowerCase().contains(lower) ||
+              (e.tags?.toLowerCase().contains(lower) ?? false) ||
+              (e.conteudo?.toLowerCase().contains(lower) ?? false);
+        }).toList();
+      }
+      // Agrupa por projeto (alfabético) e mais recente primeiro dentro do projeto
+      base.sort((a, b) {
+        final projCmp = a.projeto.compareTo(b.projeto);
+        if (projCmp != 0) return projCmp;
+        return b.timestamp.compareTo(a.timestamp);
+      });
+      return base;
     }
 
     void render(List<LogEntry> filtered) {
@@ -492,14 +679,36 @@ abstract class Draw {
         }
       } else {
         final show = filtered.take(8).toList();
+        final selectedProj = show.isNotEmpty
+            ? show[selected.clamp(0, show.length - 1)].projeto
+            : null;
+        String? lastProj;
         for (int i = 0; i < show.length; i++) {
-          _logRow(show[i], i == selected);
+          final e = show[i];
+          if (e.projeto != lastProj) {
+            if (lastProj != null) stdout.writeln(); // separador entre grupos
+            lastProj = e.projeto;
+            final isActive = e.projeto == selectedProj;
+            final projColor = isActive ? Theme.green : Theme.mauve;
+            final cnt = show.where((x) => x.projeto == e.projeto).length;
+            final plural = cnt == 1 ? '' : 's';
+            final cntLabel = Theme.dim('$cnt log$plural');
+            stdout.writeln(
+              '  $projColor\u25c8${Theme.reset} '
+              '${Theme.text}${e.projeto}${Theme.reset}  '
+              '$cntLabel',
+            );
+          }
+          _logRow(e, i == selected, indent: 2);
         }
         if (filtered.length > 8) {
-          stdout.writeln(
-            '  ${Theme.dim('... e mais ${filtered.length - 8} resultado(s).')}',
-          );
           stdout.writeln();
+          final moreLabel =
+              Theme.dim('... e mais ${filtered.length - 8} resultado(s).');
+          stdout.writeln('  $moreLabel');
+          stdout.writeln();
+        } else {
+          stdout.writeln(); // espaço após o último grupo
         }
       }
 
@@ -751,7 +960,7 @@ abstract class Draw {
     final updated = LogEntry(
       id: e.id,
       timestamp: e.timestamp,
-      projeto: novoProjeto.isEmpty ? e.projeto : novoProjeto,
+      projeto: novoProjeto,
       descricao: novaDesc.isEmpty ? e.descricao : novaDesc,
       duracaoMinutos: novaDuracao,
       categoria: kCategorias[catIdx],

@@ -187,16 +187,11 @@ Future<void> _fluxoAtividade(LogService service) async {
   Screen.instance.clear();
   stdout.writeln(
       '\n${Theme.mauve}╭─ Nova Atividade ─────────────────────────────${Theme.reset}');
-  stdout.writeln(Theme.dim('  Vazio = manter valor.  :q = cancelar.\n'));
+  stdout.writeln(Theme.dim('  :q = cancelar.\n'));
 
-  final projeto = Draw.prompt('Qual o projeto?');
+  final projeto = Draw.projectPicker(service.getProjects());
   if (projeto == null) {
     Draw.warn('Cancelado.');
-    return;
-  }
-  if (projeto.isEmpty) {
-    Draw.warn('Projeto não pode ser vazio. Voltando ao menu.');
-    _pause();
     return;
   }
 
@@ -263,16 +258,11 @@ Future<void> _fluxoAprendizado(LogService service) async {
   Screen.instance.clear();
   stdout.writeln(
       '\n${Theme.mauve}╭─ Novo Aprendizado / Solução ─────────────────${Theme.reset}');
-  stdout.writeln(Theme.dim('  Vazio = manter valor.  :q = cancelar.\n'));
+  stdout.writeln(Theme.dim('  :q = cancelar.\n'));
 
-  final projeto = Draw.prompt('Projeto / área de estudo:');
+  final projeto = Draw.projectPicker(service.getProjects());
   if (projeto == null) {
     Draw.warn('Cancelado.');
-    return;
-  }
-  if (projeto.isEmpty) {
-    Draw.warn('Campo não pode ser vazio. Voltando ao menu.');
-    _pause();
     return;
   }
 
