@@ -34,6 +34,16 @@ O **DevLog CLI** é um sistema de registro de atividades de desenvolvimento pess
 
 ---
 
+## Demo
+
+Veja o DevLog CLI em ação:
+
+<video src="assets/demo.mp4" controls="controls" style="max-width: 100%;"></video>
+
+Ou acesse o [vídeo demo completo](assets/demo.mp4).
+
+---
+
 ## Requisitos
 
 | Item                    | Versão mínima           |
