@@ -1,6 +1,6 @@
-import 'package:DevLogCli/core/database_helper.dart';
-import 'package:DevLogCli/logic/log_service.dart';
-import 'package:DevLogCli/models/log_entry.dart';
+import 'package:devlogcli/core/database_helper.dart';
+import 'package:devlogcli/logic/log_service.dart';
+import 'package:devlogcli/models/log_entry.dart';
 import 'package:test/test.dart';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
