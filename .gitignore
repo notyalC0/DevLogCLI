@@ -1,4 +1,32 @@
+# IDE
 .idea/
-build/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Dart/Flutter
 .dart_tool/
+build/
+pubspec.lock
+
+# Executáveis compilados
+devlog
+devlog.exe
+devlog.bat
+*.o
+*.so
+*.dll
+*.dylib
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# User data
+.devlog/
+*.db
+
+# Documentação local
 reference.md
