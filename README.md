@@ -48,7 +48,7 @@ O **DevLog CLI** é um sistema de registro de atividades de desenvolvimento pess
 
 ## Instalação e Configuração
 
-### Modo desenvolvimento
+### Uso direto no terminal (sem `.exe`)
 
 ```bash
 # 1. Clone o repositório
@@ -58,17 +58,81 @@ cd DevLogCLI
 # 2. Instale as dependências
 dart pub get
 
-# 3. Execute
+# 3. Execute no terminal
 dart run bin/main.dart
 ```
 
-### Compilando para executável nativo
+Esse modo é ideal para quem quer usar o programa sem gerar executável.
+
+### Windows (executável nativo)
 
 ```bash
 dart compile exe bin/main.dart -o devlog.exe
 
 # Windows — copie a DLL junto com o executável
 cp sqlite3.dll devlog.exe ../
+```
+
+Depois, execute normalmente:
+
+```bash
+./devlog.exe
+```
+
+### Windows (instalação como comando global)
+
+```powershell
+# Build
+dart pub get
+dart compile exe bin/main.dart -o devlog.exe
+
+# Pasta global do usuário
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\devlog" | Out-Null
+
+# Copia binário + DLL
+Copy-Item .\devlog.exe "$env:LOCALAPPDATA\devlog\devlog.exe" -Force
+Copy-Item .\sqlite3.dll "$env:LOCALAPPDATA\devlog\sqlite3.dll" -Force
+
+# Adiciona ao PATH do usuário (abra um novo terminal após isso)
+setx PATH "$env:PATH;$env:LOCALAPPDATA\devlog"
+
+# Em um novo terminal, use de qualquer pasta
+devlog
+```
+
+### Linux (instalação como comando global)
+
+```bash
+# Dependências do SQLite (Ubuntu/Debian)
+sudo apt update
+sudo apt install -y sqlite3 libsqlite3-dev
+
+# Build do binário
+dart pub get
+dart compile exe bin/main.dart -o devlog
+
+# Instala no PATH
+sudo install -m 755 devlog /usr/local/bin/devlog
+
+# Usa de qualquer pasta
+devlog
+```
+
+### macOS (instalação como comando global)
+
+```bash
+# Dependências (se necessário)
+brew install sqlite
+
+# Build do binário
+dart pub get
+dart compile exe bin/main.dart -o devlog
+
+# Instala no PATH
+sudo install -m 755 devlog /usr/local/bin/devlog
+
+# Usa de qualquer pasta
+devlog
 ```
 
 O banco de dados é criado automaticamente em `~/.devlog/devlog.db` na primeira execução.
@@ -78,6 +142,19 @@ O banco de dados é criado automaticamente em `~/.devlog/devlog.db` na primeira 
 ## Como Usar
 
 Ao executar `devlog`, o menu interativo é exibido. Navegue com as teclas `↑` / `↓` e confirme com `Enter`.
+
+### Iniciar o DevLog
+
+```bash
+# 1) Via Dart (sem executável)
+dart run bin/main.dart
+
+# 2) Via executável no Windows
+./devlog.exe
+
+# 3) Via comando global (Windows/Linux/macOS, após instalação)
+devlog
+```
 
 ### Opções do menu
 
