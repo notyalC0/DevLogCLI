@@ -1,4 +1,4 @@
-import 'package:DevLogCli/models/log_entry.dart';
+import 'package:devlogcli/models/log_entry.dart';
 import 'package:test/test.dart';
 
 void main() {

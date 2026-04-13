@@ -1,4 +1,4 @@
-import 'package:DevLogCli/core/database_helper.dart';
+import 'package:devlogcli/core/database_helper.dart';
 
 import '../models/log_entry.dart';
 
