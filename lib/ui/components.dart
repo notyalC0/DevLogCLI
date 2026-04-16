@@ -282,7 +282,7 @@ abstract class Draw {
         );
         stdout.writeln();
       } else {
-        const pageSize = 8;
+        const pageSize = 4;
         final offset = (selected - pageSize + 1).clamp(0, filtered.length);
         final end = (offset + pageSize).clamp(0, filtered.length);
         final page = filtered.sublist(offset, end);
@@ -370,7 +370,7 @@ abstract class Draw {
           _exitRaw();
           return null;
         }
-        if (ch == 'a') {
+        if (ch == 'a' && query.isEmpty) {
           _exitRaw();
           final novo = prompt('Nome do novo projeto:');
           if (novo == null || novo.trim().isEmpty) return null;
@@ -617,7 +617,7 @@ abstract class Draw {
           stdout.writeln();
         }
       } else {
-        final show = filtered.take(8).toList();
+        final show = filtered.take(4).toList();
         final selectedProj = show.isNotEmpty
             ? show[selected.clamp(0, show.length - 1)].projeto
             : null;
@@ -640,10 +640,10 @@ abstract class Draw {
           }
           _logRow(e, i == selected, indent: 2);
         }
-        if (filtered.length > 8) {
+        if (filtered.length > 4) {
           stdout.writeln();
           final moreLabel =
-              Theme.dim('... e mais ${filtered.length - 8} resultado(s).');
+              Theme.dim('... e mais ${filtered.length - 4} resultado(s).');
           stdout.writeln('  $moreLabel');
           stdout.writeln();
         } else {
