@@ -29,17 +29,19 @@ Future<void> runMenu() async {
       ' Salvar aprendizado / solução',
       ' Buscar nos logs',
       ' Gerar relatório semanal',
+      '󰄗 Histórico de atividade',
       '󰈍 Exportar CSV',
       ' Sair',
     ];
 
     final choice = Draw.radioMenu(
       options,
-      hotkeys: {'n': 0, 's': 1, '/': 2, 'r': 3, 'e': 4, 'q': 5},
+      hotkeys: {'n': 0, 's': 1, '/': 2, 'r': 3, 'h': 4, 'e': 5, 'q': 6},
       hints: {
         '↑↓': 'navegar',
         'ent': 'confirmar',
         '/': 'buscar',
+        'h': 'histórico',
         'r': 'relatório',
         'q': 'sair',
       },
@@ -59,9 +61,12 @@ Future<void> runMenu() async {
         _fluxoRelatorio(service);
         break;
       case 4:
-        _fluxoExportCSV(service);
+        _fluxoHistorico(service);
         break;
       case 5:
+        _fluxoExportCSV(service);
+        break;
+      case 6:
         running = false;
         break;
     }
@@ -402,6 +407,12 @@ String _miniBar(int value, int max) {
   final filled = max > 0 ? (value / max * barWidth).round() : 0;
   final empty = barWidth - filled;
   return '${Theme.green}${'█' * filled}${Theme.reset}${Theme.dim('░' * empty)}';
+}
+
+// ─── Fluxo: Histórico de atividade (heatmap) ─────────────────────────────────
+
+void _fluxoHistorico(LogService service) {
+  Draw.activityHeatmap(service);
 }
 
 // ─── Fluxo: Exportar CSV ─────────────────────────────────────────────────────

@@ -82,4 +82,33 @@ class LogService {
 
     return result.map((row) => LogEntry.fromMap(row)).toList();
   }
+
+  // Retorna Map<'YYYY-MM-DD', {logs: int, minutos: int}> das últimas N semanas
+  Map<String, Map<String, int>> getActivityByDay({int weeks = 12}) {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: weeks * 7));
+    final sinceStr =
+        '${since.year}-${since.month.toString().padLeft(2, '0')}-${since.day.toString().padLeft(2, '0')}';
+
+    final result = dataBaseHelper.select(
+      '''SELECT
+           substr(timestamp, 1, 10) AS day,
+           COUNT(*) AS total_logs,
+           COALESCE(SUM(duracao_minutos), 0) AS total_minutos
+         FROM logs
+         WHERE substr(timestamp, 1, 10) >= ?
+         GROUP BY substr(timestamp, 1, 10)
+         ORDER BY day ASC''',
+      [sinceStr],
+    );
+
+    final map = <String, Map<String, int>>{};
+    for (final row in result) {
+      map[row['day'] as String] = {
+        'logs': (row['total_logs'] as int),
+        'minutos': (row['total_minutos'] as int),
+      };
+    }
+    return map;
+  }
 }

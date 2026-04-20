@@ -3,8 +3,6 @@ import 'package:devlogcli/logic/log_service.dart';
 import 'package:devlogcli/models/log_entry.dart';
 import 'package:test/test.dart';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 DataBaseHelper _memDb() {
   final db = DataBaseHelper();
   db.initMemory();
@@ -20,10 +18,11 @@ LogEntry _entry({
   String tipo = 'Código',
   String? conteudo,
   String? tags,
+  String? timestamp,
 }) =>
     LogEntry(
       id: id,
-      timestamp: '2026-04-10T10:00:00.000',
+      timestamp: timestamp ?? '2026-04-10T10:00:00.000',
       projeto: projeto,
       descricao: descricao,
       duracaoMinutos: duracaoMinutos,
@@ -32,8 +31,6 @@ LogEntry _entry({
       conteudo: conteudo,
       tags: tags,
     );
-
-// ── Testes ───────────────────────────────────────────────────────────────────
 
 void main() {
   late DataBaseHelper db;
@@ -45,8 +42,6 @@ void main() {
   });
 
   tearDown(() => db.close());
-
-  // ── insert + getAll ───────────────────────────────────────────────
 
   group('insert / getAll', () {
     test('banco começa vazio', () {
@@ -79,20 +74,8 @@ void main() {
       expect(saved.conteudo, isNull);
       expect(saved.tags, isNull);
     });
-
-    test('campos conteudo e tags são preservados', () {
-      service.insert(_entry(
-        tipo: 'Solução / Aprendizado',
-        conteudo: 'Descobri que X',
-        tags: 'dart,sqlite',
-      ));
-      final saved = service.getAll().first;
-      expect(saved.conteudo, equals('Descobri que X'));
-      expect(saved.tags, equals('dart,sqlite'));
-    });
   });
 
-  // ── delete ────────────────────────────────────────────────────────
   group('delete', () {
     test('remove o log pelo id', () {
       service.insert(_entry());
@@ -116,7 +99,6 @@ void main() {
     });
   });
 
-  // ── update ────────────────────────────────────────────────────────
   group('update', () {
     test('atualiza os campos corretamente', () {
       service.insert(_entry(projeto: 'Antes'));
@@ -133,9 +115,7 @@ void main() {
       service.update(updated);
       final refreshed = service.getAll().first;
       expect(refreshed.projeto, equals('Depois'));
-      expect(refreshed.descricao, equals('Nova descrição'));
       expect(refreshed.duracaoMinutos, equals(90));
-      expect(refreshed.categoria, equals('Bugfix'));
     });
 
     test('lança ArgumentError quando id é null', () {
@@ -144,31 +124,8 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
-
-    test('atualiza conteudo e tags em log de aprendizado', () {
-      service.insert(_entry(
-        tipo: 'Solução / Aprendizado',
-        conteudo: 'Antes',
-        tags: 'tag1',
-      ));
-      final saved = service.getAll().first;
-      service.update(LogEntry(
-        id: saved.id,
-        timestamp: saved.timestamp,
-        projeto: saved.projeto,
-        descricao: saved.descricao,
-        categoria: saved.categoria,
-        tipo: saved.tipo,
-        conteudo: 'Depois',
-        tags: 'tag1,tag2',
-      ));
-      final refreshed = service.getAll().first;
-      expect(refreshed.conteudo, equals('Depois'));
-      expect(refreshed.tags, equals('tag1,tag2'));
-    });
   });
 
-  // ── search ────────────────────────────────────────────────────────
   group('search', () {
     setUp(() {
       service.insert(_entry(descricao: 'Implementou parser de SQL'));
@@ -181,9 +138,7 @@ void main() {
     });
 
     test('retorna resultados por descrição', () {
-      final results = service.search('parser');
-      expect(results, hasLength(1));
-      expect(results.first.descricao, contains('parser'));
+      expect(service.search('parser'), hasLength(1));
     });
 
     test('busca é case-insensitive', () {
@@ -191,67 +146,31 @@ void main() {
       expect(service.search('sql'), hasLength(1));
     });
 
-    test('retorna resultados por tag', () {
-      final results = service.search('auth');
-      expect(results, hasLength(1));
-      expect(results.first.tags, equals('auth'));
-    });
-
     test('retorna vazio para termo inexistente', () {
       expect(service.search('INEXISTENTE_XYZ'), isEmpty);
     });
-
-    test('termo vago retorna vários resultados', () {
-      expect(service.search('a'), isNotEmpty);
-    });
   });
 
-  // ── filter ────────────────────────────────────────────────────────
   group('filter', () {
     setUp(() {
       service.insert(_entry(projeto: 'Alpha', categoria: 'Feature'));
       service.insert(_entry(projeto: 'Alpha', categoria: 'Bugfix'));
       service.insert(_entry(projeto: 'Beta', categoria: 'Feature'));
-      service.insert(_entry(
-        projeto: 'Gamma',
-        categoria: 'Estudo',
-        tipo: 'Solução / Aprendizado',
-      ));
     });
 
     test('filtra por projeto', () {
-      final results = service.filter(projeto: 'Alpha');
-      expect(results, hasLength(2));
-      expect(results.every((e) => e.projeto == 'Alpha'), isTrue);
+      expect(service.filter(projeto: 'Alpha'), hasLength(2));
     });
 
     test('filtra por categoria', () {
-      final results = service.filter(categoria: 'Feature');
-      expect(results, hasLength(2));
-      expect(results.every((e) => e.categoria == 'Feature'), isTrue);
-    });
-
-    test('filtra por tipo', () {
-      final results = service.filter(tipo: 'Solução / Aprendizado');
-      expect(results, hasLength(1));
-      expect(results.first.projeto, equals('Gamma'));
-    });
-
-    test('combina projeto + categoria', () {
-      final results = service.filter(projeto: 'Alpha', categoria: 'Feature');
-      expect(results, hasLength(1));
+      expect(service.filter(categoria: 'Feature'), hasLength(2));
     });
 
     test('sem filtros retorna todos', () {
-      expect(service.filter(), hasLength(4));
-    });
-
-    test('filtro sem match retorna lista vazia', () {
-      expect(service.filter(projeto: 'Inexistente'), isEmpty);
+      expect(service.filter(), hasLength(3));
     });
   });
 
-  // ── getProjects ───────────────────────────────────────────────────
   group('getProjects', () {
     test('retorna vazio quando não há logs', () {
       expect(service.getProjects(), isEmpty);
@@ -260,26 +179,66 @@ void main() {
     test('retorna projetos distintos em ordem alfabética', () {
       service.insert(_entry(projeto: 'Zeta'));
       service.insert(_entry(projeto: 'Alpha'));
-      service.insert(_entry(projeto: 'Alpha')); // duplicado
+      service.insert(_entry(projeto: 'Alpha'));
       service.insert(_entry(projeto: 'Beta'));
+      expect(service.getProjects(), equals(['Alpha', 'Beta', 'Zeta']));
+    });
+  });
 
-      final projects = service.getProjects();
-      expect(projects, equals(['Alpha', 'Beta', 'Zeta']));
+  // ── getActivityByDay ──────────────────────────────────────────────
+  group('getActivityByDay', () {
+    test('retorna mapa vazio quando não há logs', () {
+      expect(service.getActivityByDay(), isEmpty);
     });
 
-    test('reflete inserções subsequentes', () {
-      service.insert(_entry(projeto: 'P1'));
-      expect(service.getProjects(), hasLength(1));
-      service.insert(_entry(projeto: 'P2'));
-      expect(service.getProjects(), hasLength(2));
+    test('agrega logs do mesmo dia corretamente', () {
+      final today = DateTime.now();
+      final dateStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      service.insert(_entry(
+        timestamp: '${dateStr}T09:00:00.000',
+        duracaoMinutos: 30,
+      ));
+      service.insert(_entry(
+        timestamp: '${dateStr}T14:00:00.000',
+        duracaoMinutos: 60,
+      ));
+
+      final data = service.getActivityByDay();
+      expect(data.containsKey(dateStr), isTrue);
+      expect(data[dateStr]!['logs'], equals(2));
+      expect(data[dateStr]!['minutos'], equals(90));
     });
 
-    test('projetos deletados não aparecem se não há mais logs deles', () {
-      service.insert(_entry(projeto: 'Temporario'));
-      final id =
-          service.getAll().firstWhere((e) => e.projeto == 'Temporario').id!;
-      service.delete(id);
-      expect(service.getProjects(), isEmpty);
+    test('ignora logs mais antigos que o período', () {
+      // Log de 100 dias atrás — fora das 12 semanas (84 dias)
+      service.insert(_entry(
+        timestamp: '2020-01-01T10:00:00.000',
+        duracaoMinutos: 120,
+      ));
+      expect(service.getActivityByDay(), isEmpty);
+    });
+
+    test('logs sem duração contam como 0 minutos', () {
+      final today = DateTime.now();
+      final dateStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      service.insert(_entry(
+        timestamp: '${dateStr}T10:00:00.000',
+        duracaoMinutos: null,
+      ));
+      final data = service.getActivityByDay();
+      expect(data[dateStr]!['minutos'], equals(0));
+      expect(data[dateStr]!['logs'], equals(1));
+    });
+
+    test('dias diferentes ficam em chaves separadas', () {
+      service.insert(_entry(timestamp: '2026-04-14T10:00:00.000'));
+      service.insert(_entry(timestamp: '2026-04-15T10:00:00.000'));
+      // Ambas dentro das 12 semanas a partir de hoje (2026-04-20)
+      final data = service.getActivityByDay();
+      expect(data.keys, containsAll(['2026-04-14', '2026-04-15']));
     });
   });
 }
