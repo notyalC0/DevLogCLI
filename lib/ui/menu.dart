@@ -476,16 +476,12 @@ String _catColor(String cat) {
     case 'estudo':
       return Theme.gold;
     case 'revisão':
-    case 'revisao':
       return Theme.gold;
     case 'refatoração':
-    case 'refatoracao':
       return Theme.mauve;
     case 'reunião':
-    case 'reuniao':
       return Theme.mauve;
     case 'documentação':
-    case 'documentacao':
       return Theme.text;
     case 'devops':
       return Theme.green;
