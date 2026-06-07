@@ -11,6 +11,22 @@ Versionamento segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 _(Melhorias planejadas para a próxima versão — ver [documentacao.md](documentacao.md#melhorias-futuras))_
 
+### Adicionado
+
+#### UI — Editor multiline de conteúdo
+
+- `Draw.multilinePrompt` para o campo de conteúdo dos aprendizados; `Enter` cria nova linha, `:b` remove a última linha, `:del N` remove uma linha específica, `:s` salva e `:q` cancela
+- Limite de 15 linhas para o conteúdo do aprendizado/solução
+
+#### UI — Seletor de projeto
+
+- `Draw.projectPicker` passou a usar `:a` para criar um novo projeto quando a busca estiver vazia, evitando conflito com buscas que começam com `a`
+
+### Alterado
+
+- Fluxo de aprendizado/solução atualizado para usar o editor multiline no campo de conteúdo
+- Documentação de uso atualizada para refletir os novos comandos de edição de linhas e criação de projeto
+
 ---
 
 ## [1.2.0] — 2026-04-10

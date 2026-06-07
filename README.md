@@ -171,7 +171,7 @@ devlog
 | Opção                         | O que faz                                                                              |
 | ----------------------------- | -------------------------------------------------------------------------------------- |
 | Registrar atividade de código | Cria um log com projeto, descrição, duração e categoria                                |
-| Salvar aprendizado / solução  | Cria um log do tipo "Solução/Aprendizado" com tags e conteúdo detalhado                |
+| Salvar aprendizado / solução  | Cria um log do tipo "Solução/Aprendizado" com tags e conteúdo em múltiplas linhas      |
 | Buscar nos logs               | Busca interativa em tempo real por `descricao`, `projeto`, `categoria` e `tags`        |
 | Gerar relatório semanal       | Exibe total de horas, breakdown por projeto/categoria e base de conhecimento acumulada |
 | Exportar CSV                  | Exporta todos os logs para `~/.devlog/devlog_export.csv`                               |
@@ -179,11 +179,17 @@ devlog
 
 > **Cancelar qualquer campo:** em qualquer prompt de texto, digite `:q` e pressione `Enter` para cancelar a operação e voltar ao menu.
 
+> **Atalhos especiais do fluxo de conteúdo:** no campo de detalhes do aprendizado, `Enter` cria uma nova linha; `:b` remove a última linha; `:del N` remove a linha `N`; `:s` salva o texto. O editor aceita até 15 linhas.
+
+> **Novo projeto no seletor:** no campo de busca de projetos, com a busca vazia, digite `:a` para abrir o prompt de criação de um novo projeto.
+
 ### Como editar ou deletar um log
 
 1. Abra **Buscar nos logs**.
 2. Navegue com `↑`/`↓` até o log desejado e pressione `Enter` — o **painel de detalhe** abre.
 3. No detalhe, use `e` para **editar** ou `d` para **deletar**.
+
+> Ao editar um log do tipo **Solução/Aprendizado**, o campo de conteúdo usa o mesmo editor multiline: `Enter` nova linha, `:b` volta uma linha, `:del N` apaga uma linha específica e `:s` salva.
 
 > As teclas `e` e `d` só disparam ações dentro do painel de detalhe — na busca elas são tratadas como caracteres normais do termo de busca.
 
@@ -331,13 +337,17 @@ Desenha uma caixa Unicode `╭─ TITLE ──╮`. Calcula o padding automatica
 
 Renderiza a pergunta colorida e lê uma linha do `stdin`. Retorna `null` se o usuário digitar `:q` (cancelamento universal).
 
+#### `Draw.multilinePrompt(String question, {int maxLines = 15, String? initialValue}) → String?`
+
+Editor de texto multiline para campos longos. `Enter` cria uma nova linha, `:b` remove a última linha, `:del N` remove a linha `N`, `:s` salva e `:q` cancela. É usado no fluxo de aprendizado/solução e na edição do campo `conteudo`.
+
 #### `Draw.radioMenu(List<String> options, {Map<String,String>? hotkeys, List<String>? hints})`
 
 Menu navegável com `◉`/`◯`, teclas `↑`/`↓` em modo raw do terminal. Suporta linha opcional de dicas (`hints`) renderizada abaixo das opções. Cai em modo numérico se o terminal não suportar raw mode.
 
 #### `Draw.projectPicker(List<String> existing, {String? current}) → String?`
 
-Tela de busca ao vivo para escolher um projeto existente. Mostra até 8 projetos por vez com indicador de scroll; digitar filtra em tempo real; `a` abre prompt para criar um novo; `Enter` seleciona; `q`/`Esc` cancela. Usado nos fluxos de registro e edição.
+Tela de busca ao vivo para escolher um projeto existente. Mostra até 8 projetos por vez com indicador de scroll; digitar filtra em tempo real; com a busca vazia, `:a` abre prompt para criar um novo; `Enter` seleciona; `q`/`Esc` cancela. Usado nos fluxos de registro e edição.
 
 #### `Draw.liveSearch(List<LogEntry> allEntries, LogService service)`
 
@@ -376,7 +386,7 @@ Loop principal de navegação. Expõe `Future<void> runMenu()` chamado pelo `mai
 | Fluxo               | Campos coletados                                     |
 | ------------------- | ---------------------------------------------------- |
 | Registrar atividade | projeto, descrição, duração, categoria (radio)       |
-| Salvar aprendizado  | projeto, título, conteúdo, tags                      |
+| Salvar aprendizado  | projeto, título, conteúdo multiline, tags            |
 | Buscar              | busca ao vivo; Enter → detalhe com edição e exclusão |
 | Relatório semanal   | automático: atividades + base de conhecimento        |
 | Exportar CSV        | automático (sem input)                               |
@@ -386,6 +396,10 @@ Loop principal de navegação. Expõe `Future<void> runMenu()` chamado pelo `mai
 **Export CSV** (`_fluxoExportCSV`): serialização manual conforme RFC 4180 — células com vírgulas, aspas ou quebras de linha são envoltas em aspas duplas, e aspas internas são escapadas como `""`.
 
 **Relatório semanal:** dividido em duas seções — atividades de código (com breakdown por projeto e categoria) e base de conhecimento (lista de soluções/aprendizados com contagem de tags).
+
+**Fluxo de conteúdo do aprendizado:** o campo de detalhes usa um editor multiline próprio. `Enter` adiciona uma nova linha, `:b` desfaz a última, `:del N` apaga a linha `N`, `:s` salva e `:q` cancela. O limite atual é de 15 linhas.
+
+**Criação de projeto:** no seletor de projeto, quando a busca está vazia, `:a` abre o prompt de criação de um novo projeto para não conflitar com termos digitados normalmente.
 
 ---
 

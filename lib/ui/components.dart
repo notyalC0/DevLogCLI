@@ -236,6 +236,7 @@ abstract class Draw {
 
     var query = '';
     var selected = 0;
+    var awaitingProjectCommand = false;
     final inputW = (_scr.cols - 8).clamp(30, 60);
 
     if (current != null) {
@@ -273,7 +274,7 @@ abstract class Draw {
 
       if (filtered.isEmpty) {
         stdout.writeln(
-          '  ${Theme.dim('Nenhum projeto encontrado — ')}${Theme.green}a${Theme.reset}${Theme.dim(' para criar novo')}',
+          '  ${Theme.dim('Nenhum projeto encontrado — ')}${Theme.green}:a${Theme.reset}${Theme.dim(' para criar novo')}',
         );
         stdout.writeln();
       } else {
@@ -314,7 +315,7 @@ abstract class Draw {
       hotkeyBar({
         '↑↓': 'navegar',
         'ent': 'selecionar',
-        'a': 'novo projeto',
+        ':a': 'novo projeto',
         'q': 'cancelar',
       });
     }
@@ -349,6 +350,10 @@ abstract class Draw {
             _exitRaw();
             return null;
           case ControlCharacter.backspace:
+            if (awaitingProjectCommand) {
+              awaitingProjectCommand = false;
+              break;
+            }
             if (query.isNotEmpty) {
               query = query.substring(0, query.length - 1);
               selected = 0;
@@ -361,16 +366,32 @@ abstract class Draw {
         }
       } else {
         final ch = key.char;
+        if (awaitingProjectCommand) {
+          awaitingProjectCommand = false;
+          final command = ':$ch';
+          if (query.isEmpty && command == ':a') {
+            _exitRaw();
+            final novo = prompt('Nome do novo projeto:');
+            if (novo == null || novo.trim().isEmpty) return null;
+            return novo.trim();
+          }
+          if (query.isEmpty && command == ':q') {
+            _exitRaw();
+            return null;
+          }
+          query += command;
+          selected = 0;
+          filtered = doFilter(query);
+          render(filtered);
+          continue;
+        }
         if (ch == 'q' && query.isEmpty) {
           _exitRaw();
           return null;
         }
-        // 'a' só cria novo projeto se não há nada digitado ainda
-        if (ch == 'a' && query.isEmpty) {
-          _exitRaw();
-          final novo = prompt('Nome do novo projeto:');
-          if (novo == null || novo.trim().isEmpty) return null;
-          return novo.trim();
+        if (ch == ':' && query.isEmpty) {
+          awaitingProjectCommand = true;
+          continue;
         }
         query += ch;
         selected = 0;
@@ -433,7 +454,7 @@ abstract class Draw {
       stdout.writeln();
       stdout.writeln(
         Theme.dim(
-          '  Enter = nova linha · :s = salvar · :q = cancelar · até $maxLines linhas',
+          '  Enter = nova linha · :s = salvar · :b = voltar 1 linha · :del N = excluir linha · :q = cancelar · até $maxLines linhas',
         ),
       );
       stdout.writeln();
@@ -454,9 +475,11 @@ abstract class Draw {
         final trimmed = command.trim();
         if (trimmed == ':q') return null;
         if (trimmed == ':s') return lines.join('\n');
+        final handled = _applyMultilineCommand(lines, trimmed);
+        if (handled) continue;
         stdout.writeln(
           Theme.dim(
-            '  Limite de $maxLines linhas atingido. Digite :s para salvar ou :q para cancelar.',
+            '  Limite de $maxLines linhas atingido. Use :s, :b, :del N ou :q.',
           ),
         );
         continue;
@@ -471,9 +494,30 @@ abstract class Draw {
       final trimmed = line.trim();
       if (trimmed == ':q') return null;
       if (trimmed == ':s') return lines.join('\n');
+      if (_applyMultilineCommand(lines, trimmed)) continue;
 
       lines.add(line);
     }
+  }
+
+  static bool _applyMultilineCommand(List<String> lines, String command) {
+    if (command == ':b' || command == ':back') {
+      if (lines.isNotEmpty) {
+        lines.removeLast();
+      }
+      return true;
+    }
+
+    final delMatch = RegExp(r'^:(?:del|delete)\s+(\d+)$').firstMatch(command);
+    if (delMatch != null) {
+      final index = int.tryParse(delMatch.group(1)!);
+      if (index != null && index >= 1 && index <= lines.length) {
+        lines.removeAt(index - 1);
+      }
+      return true;
+    }
+
+    return false;
   }
 
   // ─── Caixa unicode ───────────────────────────────────────────────
