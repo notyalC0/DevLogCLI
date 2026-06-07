@@ -411,6 +411,71 @@ abstract class Draw {
     return val;
   }
 
+  static String? multilinePrompt(
+    String question, {
+    String color = Theme.pink,
+    int maxLines = 15,
+    String? initialValue,
+  }) {
+    _exitRaw();
+
+    final lines = <String>[];
+    if (initialValue != null && initialValue.isNotEmpty) {
+      lines.addAll(initialValue.replaceAll('\r\n', '\n').split('\n'));
+    }
+
+    while (true) {
+      _scr.clear();
+      stdout.writeln();
+      stdout.writeln(
+        '$color◆${Theme.reset} ${Theme.text}$question${Theme.reset}',
+      );
+      stdout.writeln();
+      stdout.writeln(
+        Theme.dim(
+          '  Enter = nova linha · :s = salvar · :q = cancelar · até $maxLines linhas',
+        ),
+      );
+      stdout.writeln();
+      stdout.writeln('${Theme.gold}Conteúdo atual:${Theme.reset}');
+      if (lines.isEmpty) {
+        stdout.writeln('  ${Theme.dim('(vazio)')}');
+      } else {
+        for (int i = 0; i < lines.length; i++) {
+          stdout.writeln('  ${i + 1}. ${lines[i]}');
+        }
+      }
+      stdout.writeln();
+
+      if (lines.length >= maxLines) {
+        stdout.write('${Theme.green}❯${Theme.reset} ');
+        final command = Screen.instance.readLine();
+        if (command == null) return null;
+        final trimmed = command.trim();
+        if (trimmed == ':q') return null;
+        if (trimmed == ':s') return lines.join('\n');
+        stdout.writeln(
+          Theme.dim(
+            '  Limite de $maxLines linhas atingido. Digite :s para salvar ou :q para cancelar.',
+          ),
+        );
+        continue;
+      }
+
+      stdout.write(
+        '${Theme.green}❯${Theme.reset} Linha ${lines.length + 1}/$maxLines: ',
+      );
+      final line = Screen.instance.readLine();
+      if (line == null) return null;
+
+      final trimmed = line.trim();
+      if (trimmed == ':q') return null;
+      if (trimmed == ':s') return lines.join('\n');
+
+      lines.add(line);
+    }
+  }
+
   // ─── Caixa unicode ───────────────────────────────────────────────
 
   static void box(String title, List<String> content) {
@@ -516,7 +581,8 @@ abstract class Draw {
       } else {
         // P1: calcular offset real para que 'selected' esteja sempre visível
         final clampedSelected = selected.clamp(0, filtered.length - 1);
-        final offset = (clampedSelected - pageSize + 1).clamp(0, filtered.length);
+        final offset =
+            (clampedSelected - pageSize + 1).clamp(0, filtered.length);
         final end = (offset + pageSize).clamp(0, filtered.length);
         final show = filtered.sublist(offset, end);
 
@@ -610,8 +676,7 @@ abstract class Draw {
             if (filtered.isNotEmpty) {
               final realIdx = selected.clamp(0, filtered.length - 1);
               _exitRaw();
-              final deleted =
-                  logDetail(filtered[realIdx], service: service);
+              final deleted = logDetail(filtered[realIdx], service: service);
               if (deleted) {
                 entries = service.getAll();
                 filtered = doFilter(query);
@@ -749,19 +814,37 @@ abstract class Draw {
 
       // Labels dos meses acima da grade
       // Detectar onde cada mês começa na grade
-      final monthLine = StringBuffer('     '); // 5 chars de indent para os labels de dia
+      final monthLine =
+          StringBuffer('     '); // 5 chars de indent para os labels de dia
       String? lastMonth;
       const monthNames = [
-        '', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-        'jul', 'ago', 'set', 'out', 'nov', 'dez'
+        '',
+        'jan',
+        'fev',
+        'mar',
+        'abr',
+        'mai',
+        'jun',
+        'jul',
+        'ago',
+        'set',
+        'out',
+        'nov',
+        'dez'
       ];
       for (int c = 0; c < weeks.length; c++) {
         // Pega o primeiro dia não-nulo da semana
         DateTime? rep;
         for (final d in weeks[c]) {
-          if (d != null) { rep = d; break; }
+          if (d != null) {
+            rep = d;
+            break;
+          }
         }
-        if (rep == null) { monthLine.write('   '); continue; }
+        if (rep == null) {
+          monthLine.write('   ');
+          continue;
+        }
         final mName = monthNames[rep.month];
         if (mName != lastMonth) {
           monthLine.write('${Theme.dim(mName)} ');
@@ -803,9 +886,10 @@ abstract class Draw {
       stdout.writeln();
 
       // Painel de info do dia selecionado
-      final selDt = (selRow >= 0 && selRow < 7 && selCol >= 0 && selCol < weeks.length)
-          ? weeks[selCol][selRow]
-          : null;
+      final selDt =
+          (selRow >= 0 && selRow < 7 && selCol >= 0 && selCol < weeks.length)
+              ? weeks[selCol][selRow]
+              : null;
 
       if (selDt != null) {
         final key = _dayKey(selDt);
@@ -813,16 +897,41 @@ abstract class Draw {
         final logs = data?['logs'] ?? 0;
         final minutos = data?['minutos'] ?? 0;
 
-        const wdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-        const months2 = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const wdays = [
+          'Segunda',
+          'Terça',
+          'Quarta',
+          'Quinta',
+          'Sexta',
+          'Sábado',
+          'Domingo'
+        ];
+        const months2 = [
+          '',
+          'jan',
+          'fev',
+          'mar',
+          'abr',
+          'mai',
+          'jun',
+          'jul',
+          'ago',
+          'set',
+          'out',
+          'nov',
+          'dez'
+        ];
         final wday = wdays[selDt.weekday - 1];
-        final dateStr = '$wday, ${selDt.day.toString().padLeft(2, '0')} ${months2[selDt.month]} ${selDt.year}';
+        final dateStr =
+            '$wday, ${selDt.day.toString().padLeft(2, '0')} ${months2[selDt.month]} ${selDt.year}';
 
-        stdout.writeln('  ${Theme.gold}◷${Theme.reset}  ${Theme.text}$dateStr${Theme.reset}');
+        stdout.writeln(
+            '  ${Theme.gold}◷${Theme.reset}  ${Theme.text}$dateStr${Theme.reset}');
         stdout.writeln();
 
         if (logs == 0) {
-          stdout.writeln('  ${Theme.dim('Nenhuma atividade registrada neste dia.')}');
+          stdout.writeln(
+              '  ${Theme.dim('Nenhuma atividade registrada neste dia.')}');
         } else {
           final logsLabel = logs == 1 ? 'log registrado' : 'logs registrados';
           stdout.writeln(
@@ -856,7 +965,8 @@ abstract class Draw {
           }
         }
       } else {
-        stdout.writeln('  ${Theme.dim('Selecione um dia para ver os detalhes.')}');
+        stdout.writeln(
+            '  ${Theme.dim('Selecione um dia para ver os detalhes.')}');
       }
 
       stdout.writeln();
@@ -923,8 +1033,10 @@ abstract class Draw {
           if (selDt != null) {
             final key2 =
                 '${selDt.year}-${selDt.month.toString().padLeft(2, '0')}-${selDt.day.toString().padLeft(2, '0')}';
-            final dayLogs =
-                service.getAll().where((e) => e.timestamp.startsWith(key2)).toList();
+            final dayLogs = service
+                .getAll()
+                .where((e) => e.timestamp.startsWith(key2))
+                .toList();
             if (dayLogs.isNotEmpty) {
               _exitRaw();
               logList(dayLogs,
@@ -1066,12 +1178,12 @@ abstract class Draw {
         '${Theme.gold}Tipo:      ${Theme.reset}${Theme.text}${entry.tipo}${Theme.reset}',
         '',
         '${Theme.mauve}Descrição:${Theme.reset}',
-        ..._wrap('  ${entry.descricao}', 54)
+        ..._wrap(entry.descricao, 54, prefix: '  ')
             .map((l) => '${Theme.text}$l${Theme.reset}'),
         if (entry.conteudo != null && entry.conteudo!.isNotEmpty) ...[
           '',
           '${Theme.mauve}Conteúdo:${Theme.reset}',
-          ..._wrap('  ${entry.conteudo!}', 54)
+          ..._wrap(entry.conteudo!, 54, prefix: '  ')
               .map((l) => '${Theme.text}$l${Theme.reset}'),
         ],
         if (entry.tags != null && entry.tags!.isNotEmpty) ...[
@@ -1190,13 +1302,11 @@ abstract class Draw {
     String? novoConteudo = e.conteudo;
     String? novasTags = e.tags;
     if (e.tipo == 'Solução / Aprendizado') {
-      final conteudoPreview = e.conteudo == null
-          ? 'vazio'
-          : (e.conteudo!.length > 40
-              ? '${e.conteudo!.substring(0, 37)}...'
-              : e.conteudo!);
-      final c = prompt('Conteúdo (atual: $conteudoPreview) — vazio = manter:',
-          color: Theme.cyan);
+      final c = multilinePrompt(
+        'Conteúdo / detalhes:',
+        color: Theme.cyan,
+        initialValue: e.conteudo,
+      );
       if (c == null) {
         warn('Edição cancelada.');
         return null;
@@ -1350,22 +1460,33 @@ abstract class Draw {
     return null;
   }
 
-  static List<String> _wrap(String text, int maxWidth) {
-    if (text.length <= maxWidth) return [text];
-    final words = text.split(' ');
+  static List<String> _wrap(
+    String text,
+    int maxWidth, {
+    String prefix = '',
+  }) {
+    final availableWidth = (maxWidth - prefix.length).clamp(1, maxWidth);
+    final normalized = text.replaceAll('\r\n', '\n');
     final lines = <String>[];
-    var current = '';
-    for (final word in words) {
-      if (current.isEmpty) {
-        current = word;
-      } else if ((current + ' ' + word).length <= maxWidth) {
-        current += ' $word';
-      } else {
-        lines.add(current);
-        current = '    $word';
+    for (final paragraph in normalized.split('\n')) {
+      if (paragraph.isEmpty) {
+        lines.add(prefix);
+        continue;
       }
+      final words = paragraph.split(' ');
+      var current = '';
+      for (final word in words) {
+        if (current.isEmpty) {
+          current = word;
+        } else if ((current.length + 1 + word.length) <= availableWidth) {
+          current += ' $word';
+        } else {
+          lines.add('$prefix$current');
+          current = word;
+        }
+      }
+      if (current.isNotEmpty) lines.add('$prefix$current');
     }
-    if (current.isNotEmpty) lines.add(current);
     return lines;
   }
 }

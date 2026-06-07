@@ -253,8 +253,8 @@ Future<void> _fluxoAprendizado(LogService service) async {
     return;
   }
 
-  final conteudo = Draw.prompt(
-    'Conteúdo / detalhes (Enter para encerrar):',
+  final conteudo = Draw.multilinePrompt(
+    'Conteúdo / detalhes:',
     color: Theme.cyan,
   );
   if (conteudo == null) {
