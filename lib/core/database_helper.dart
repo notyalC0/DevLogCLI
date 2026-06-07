@@ -4,7 +4,6 @@ import 'package:sqlite3/sqlite3.dart';
 
 class DataBaseHelper {
   late Database _db;
-
   static String _getPath() {
     final home = Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE'] ??
